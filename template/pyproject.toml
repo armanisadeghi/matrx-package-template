@@ -1,0 +1,42 @@
+[project]
+name = "__PKG_DIST__"
+version = "0.1.0"
+description = "__PKG_DESC__"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Matrx", email = "admin@aimatrx.com" }]
+requires-python = ">=3.13"
+keywords = ["matrx"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+]
+# RULE (INDEPENDENCE.md): every import in this package must resolve from THIS list
+# alone. Declared matrx-* siblings are allowed; the host application never is.
+dependencies = [
+    "pydantic>=2.12",
+]
+
+[project.optional-dependencies]
+# `standalone` = everything needed to run the package as its own microservice.
+# Host mode does not need these (the host brings its own server stack).
+standalone = [
+    "fastapi>=0.115",
+    "uvicorn>=0.34",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.25",
+    "httpx>=0.28",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["__PKG_MODULE__"]
