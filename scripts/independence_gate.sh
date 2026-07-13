@@ -47,6 +47,7 @@ VIRTUAL_ENV="$WORK/venv" uv pip install --quiet pytest pytest-asyncio httpx >/de
 
 # Run the smoke tests from an EMPTY cwd so the source tree can't leak in via sys.path.
 cp -R "$PKG_DIR/tests" "$WORK/tests"
+cp "$PKG_DIR/pyproject.toml" "$WORK/pyproject.toml"  # pytest config (asyncio_mode etc.) travels with the package
 cd "$WORK"
 echo "  booting standalone app + smoke tests (bare venv, empty cwd)"
 "$WORK/venv/bin/python" -m pytest tests -q || fail "standalone boot / smoke tests failed in the bare venv"
