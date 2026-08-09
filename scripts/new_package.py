@@ -11,8 +11,12 @@ Placeholders replaced everywhere (file contents AND paths):
     __PKG_MODULE__      matrx_files          (import name)
     __PKG_TITLE__       Matrx Files          (human name)
     __PKG_SLUG__        files                (route prefix segment)
-    __PKG_ENV_PREFIX__  MATRX_FILES          (env var prefix)
     __PKG_DESC__        --desc value
+
+There is deliberately NO per-package env-var prefix placeholder. A package takes
+ONE required connection through matrx_orm.register_platform_db() (SUPABASE_MATRIX_*)
+and never a package-named connection variable — INDEPENDENCE.md law #4 and
+/Users/armanisadeghi/code/common-docs/policies/package-vs-implementation.md.
 """
 
 from __future__ import annotations
@@ -40,14 +44,12 @@ def main() -> int:
         return 1
     module = dist.replace("-", "_")
     slug = dist.removeprefix("matrx-")
-    env_prefix = module.upper()
 
     mapping = {
         "__PKG_DIST__": dist,
         "__PKG_MODULE__": module,
         "__PKG_TITLE__": args.title,
         "__PKG_SLUG__": slug,
-        "__PKG_ENV_PREFIX__": env_prefix,
         "__PKG_DESC__": args.desc,
     }
 
