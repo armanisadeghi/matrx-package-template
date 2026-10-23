@@ -43,7 +43,33 @@ done
 echo "  installing package (with [standalone] extra) from its own pyproject"
 VIRTUAL_ENV="$WORK/venv" uv pip install --quiet "${PKG_DIR}[standalone]" \
   || fail "bare install failed — the pyproject does not describe a self-sufficient package"
-VIRTUAL_ENV="$WORK/venv" uv pip install --quiet pytest pytest-asyncio httpx >/dev/null
+
+# The package's own declared dev group carries dependencies needed only to run
+# its tests. Read the package pyproject from the fresh interpreter so malformed
+# TOML fails closed. Install only that group into this same bare environment;
+# packages without a dev group keep the historical minimal test-tool fallback.
+DEV_GROUP_STATE="$("$WORK/venv/bin/python" - "$PKG_DIR/pyproject.toml" <<'PY'
+import sys
+import tomllib
+from pathlib import Path
+
+project = tomllib.loads(Path(sys.argv[1]).read_text())
+groups = project.get("dependency-groups", {})
+if not isinstance(groups, dict):
+    raise TypeError("[dependency-groups] must be a table")
+print("declared" if "dev" in groups else "absent")
+PY
+)" || fail "could not read the package's dependency groups"
+if [[ "$DEV_GROUP_STATE" == "declared" ]]; then
+  echo "  installing the package's declared dev group from its own pyproject"
+  uv pip install --quiet --python "$WORK/venv/bin/python" --group "$PKG_DIR/pyproject.toml:dev" \
+    || fail "declared dev dependency group install failed"
+elif [[ "$DEV_GROUP_STATE" == "absent" ]]; then
+  echo "  package has no dev group; installing the minimal pytest fallback"
+  VIRTUAL_ENV="$WORK/venv" uv pip install --quiet pytest pytest-asyncio httpx >/dev/null
+else
+  fail "unexpected dependency-group inspection result: $DEV_GROUP_STATE"
+fi
 
 # Run the smoke tests from an EMPTY cwd so the source tree can't leak in via sys.path.
 cp -R "$PKG_DIR/tests" "$WORK/tests"
